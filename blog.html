@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog Details</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      color: #333;
+      margin: 0;
+    }
+    header {
+      background: #8B00FF;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      max-width: 800px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .container img {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+    footer {
+      background: #8B00FF;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      margin-top: 40px;
+    }
+    .back {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 8px 12px;
+      background: #8B00FF;
+      color: white;
+      border-radius: 6px;
+      text-decoration: none;
+    }
+    .back:hover { background: #5a00b3; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🕯 Blog Details</h1>
+  </header>
+
+  <div class="container" id="blog-detail"></div>
+
+  <footer>
+    <p>&copy; 2025 My Blog</p>
+  </footer>
+
+  <script>
+    async function loadBlogDetail() {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get("id");
+
+      const response = await fetch("blog.json");
+      const blogs = await response.json();
+      const blog = blogs.find(b => b.id == id);
+
+      if (blog) {
+        const container = document.getElementById("blog-detail");
+        container.innerHTML = `
+          <img src="${blog.image}" alt="${blog.title}">
+          <h2>${blog.title}</h2>
+          <small>📅 ${blog.date}</small>
+          <p>${blog.content}</p>
+          <a class="back" href="index.html">⬅ Back to Blogs</a>
+        `;
+      } else {
+        document.getElementById("blog-detail").innerHTML = "<p>Blog not found!</p>";
+      }
+    }
+
+    loadBlogDetail();
+  </script>
+</body>
+</html>
