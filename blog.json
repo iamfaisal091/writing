@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "title": "Mera Pehla Blog",
+    "date": "2025-09-08",
+    "image": "https://via.placeholder.com/300x200.png?text=Blog+1",
+    "content": "Yeh mera pehla blog hai jo JSON file ke through load ho raha hai. Isme maine blogging ka basic idea share kiya hai."
+  },
+  {
+    "id": 2,
+    "title": "Technology aur Life",
+    "date": "2025-09-05",
+    "image": "https://via.placeholder.com/300x200.png?text=Technology",
+    "content": "Technology insaan ki life ko easy banati hai, lekin uske sahi use par depend karta hai. Agar wisely use karein toh life aur productive ban sakti hai."
+  },
+  {
+    "id": 3,
+    "title": "Philosophy",
+    "date": "2025-09-01",
+    "image": "https://via.placeholder.com/300x200.png?text=Philosophy",
+    "content": "Zindagi ek safar hai, aur har experience ek naya chapter likhta hai. Philosophy humein life ke deeper meaning samjhane mein help karti hai."
+  }
+]
