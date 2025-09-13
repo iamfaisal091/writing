@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini Chrome Search</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #fff;
+      color: #000;
+    }
+
+    /* Top bar */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f1f3f4;
+      padding: 6px 10px;
+      border-bottom: 1px solid #ccc;
+    }
+    .search-box {
+      flex: 1;
+      margin: 0 10px;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 20px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    /* Menu dots */
+    .menu {
+      position: relative;
+      cursor: pointer;
+      padding: 6px;
+    }
+    .dots {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 16px;
+    }
+    .dots span {
+      width: 4px;
+      height: 4px;
+      background: #333;
+      border-radius: 50%;
+      display: block;
+    }
+
+    /* Dropdown */
+    .dropdown {
+      position: absolute;
+      top: 30px;
+      right: 0;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      display: none;
+      box-shadow: 0px 2px 6px rgba(0,0,0,0.2);
+    }
+    .dropdown div {
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    .dropdown div:hover {
+      background: #f1f1f1;
+    }
+
+    /* Sections */
+    .section {
+      display: none;
+      position: fixed;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 600px;
+      height: 70%;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+      overflow-y: auto;
+      z-index: 100;
+      padding: 10px;
+    }
+    .section h2 {
+      margin: 0;
+      font-size: 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .close-btn {
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 18px;
+      padding: 2px 6px;
+      border-radius: 50%;
+      background: #f1f1f1;
+    }
+    .close-btn:hover {
+      background: #ddd;
+    }
+
+    /* Results */
+    .results {
+      padding: 10px;
+    }
+    .result-item {
+      padding: 6px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .result-item:last-child {
+      border-bottom: none;
+    }
+    .result-item a {
+      text-decoration: none;
+      color: #1a73e8;
+      font-weight: bold;
+    }
+    .result-item p {
+      margin: 4px 0;
+      font-size: 13px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search blogs...">
+    </div>
+    <div class="menu" onclick="toggleMenu()">
+      <div class="dots">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="dropdown" id="dropdown">
+        <div onclick="openSection('history')">History</div>
+        <div onclick="openSection('downloads')">Downloads</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="results" id="results"></div>
+
+  <!-- History Section -->
+  <div class="section" id="historySection">
+    <h2>
+      History
+      <span class="close-btn" onclick="closeSection('history')">×</span>
+    </h2>
+    <div id="historyList"></div>
+  </div>
+
+  <!-- Downloads Section -->
+  <div class="section" id="downloadsSection">
+    <h2>
+      Downloads
+      <span class="close-btn" onclick="closeSection('downloads')">×</span>
+    </h2>
+    <div id="downloadsList">No downloads yet</div>
+  </div>
+
+  <script>
+    let blogs = [];
+
+    // load blog.json
+    fetch("blog.json")
+      .then(res => res.json())
+      .then(data => blogs = data)
+      .catch(err => console.error("Blog load error:", err));
+
+    // Toggle dropdown menu
+    function toggleMenu() {
+      const menu = document.getElementById("dropdown");
+      menu.style.display = menu.style.display === "block" ? "none" : "block";
+    }
+
+    // Open section
+    function openSection(type) {
+      document.getElementById("dropdown").style.display = "none";
+      if (type === "history") {
+        document.getElementById("historySection").style.display = "block";
+        loadHistory();
+      } else if (type === "downloads") {
+        document.getElementById("downloadsSection").style.display = "block";
+      }
+    }
+
+    // Close section
+    function closeSection(type) {
+      if (type === "history") {
+        document.getElementById("historySection").style.display = "none";
+      } else if (type === "downloads") {
+        document.getElementById("downloadsSection").style.display = "none";
+      }
+    }
+
+    // Search box
+    const searchInput = document.getElementById("searchInput");
+    const resultsDiv = document.getElementById("results");
+
+    searchInput.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        const query = this.value.trim().toLowerCase();
+        if (query) {
+          let results = blogs.filter(b =>
+            b.title.toLowerCase().includes(query) ||
+            b.content.toLowerCase().includes(query)
+          );
+
+          if (results.length > 0) {
+            resultsDiv.innerHTML = results.map(b => `
+              <div class="result-item">
+                <a href="${b.url}" target="_blank">${b.title}</a>
+                <p>${b.content.substring(0, 120)}...</p>
+              </div>
+            `).join("");
+          } else {
+            resultsDiv.innerHTML = `<p>No results found for "${query}"</p>`;
+          }
+
+          saveHistory(query);
+        }
+      }
+    });
+
+    // Save history in localStorage
+    function saveHistory(query) {
+      let history = JSON.parse(localStorage.getItem("history")) || [];
+      history.unshift(query);
+      localStorage.setItem("history", JSON.stringify(history));
+    }
+
+    // Load history
+    function loadHistory() {
+      let history = JSON.parse(localStorage.getItem("history")) || [];
+      let list = document.getElementById("historyList");
+      list.innerHTML = history.length
+        ? history.map(item => `<div class="result-item">${item}</div>`).join("")
+        : "No history yet";
+    }
+  </script>
+</body>
+</html>
