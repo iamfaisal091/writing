@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chrome Style Search</title>
+<style>
+  * {margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}
+  body{background:#fff;color:#222;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;background:#f1f3f4;padding:8px 12px;border-bottom:1px solid #ccc;}
+  .topbar input{flex:1;margin:0 10px;padding:6px 10px;border:1px solid #ccc;border-radius:20px;}
+  .dots{cursor:pointer;font-size:20px;user-select:none;}
+  .menu{position:absolute;top:40px;right:10px;background:#fff;border:1px solid #ccc;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,0.2);display:none;flex-direction:column;}
+  .menu button{background:none;border:none;padding:10px 20px;text-align:left;cursor:pointer;}
+  .menu button:hover{background:#f1f1f1;}
+  #results{padding:20px;}
+  .result{border-bottom:1px solid #ddd;padding:10px 0;}
+  .result h3{margin-bottom:5px;color:#1a73e8;cursor:pointer;}
+  .result p{color:#555;}
+  .section{position:fixed;top:50px;right:20px;width:300px;height:400px;background:#fff;border:1px solid #ccc;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.3);padding:15px;overflow-y:auto;display:none;}
+  .section h3{margin-bottom:10px;}
+  .section ul{list-style:none;padding:0;}
+  .section li{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;padding:6px 0;}
+  .section li button{background:none;border:none;color:red;cursor:pointer;font-size:14px;}
+  .close-btn{position:absolute;top:8px;right:10px;border:none;background:none;font-size:18px;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span style="font-weight:bold;">🔍 Chrome</span>
+  <input type="text" id="searchBox" placeholder="Search your blogs...">
+  <span class="dots" onclick="toggleMenu()">⋮</span>
+  <div class="menu" id="menu">
+    <button onclick="openSection('history')">History</button>
+    <button onclick="openSection('downloads')">Downloads</button>
+  </div>
+</div>
+
+<div id="results"></div>
+
+<div id="history-section" class="section">
+  <button class="close-btn" onclick="closeSection('history')">✖</button>
+  <h3>History</h3>
+  <ul id="history-list"></ul>
+</div>
+
+<div id="downloads-section" class="section">
+  <button class="close-btn" onclick="closeSection('downloads')">✖</button>
+  <h3>Downloads</h3>
+  <ul id="downloads-list"></ul>
+</div>
+
+<script>
+  const searchBox = document.getElementById("searchBox");
+  const resultsDiv = document.getElementById("results");
+
+  // toggle menu
+  function toggleMenu(){
+    const menu = document.getElementById("menu");
+    menu.style.display = menu.style.display==="flex"?"none":"flex";
+  }
+
+  // open/close section
+  function openSection(type){document.getElementById(type+"-section").style.display="block";}
+  function closeSection(type){document.getElementById(type+"-section").style.display="none";}
+
+  // perform search
+  function performSearch(query){
+    if(!query.trim()) return;
+
+    fetch("blog.json")
+      .then(res=>res.json())
+      .then(data=>{
+        const results = data.filter(item=>item.title.toLowerCase().includes(query.toLowerCase()));
+        displayResults(results);
+      });
+
+    saveHistory(query);
+  }
+
+  searchBox.addEventListener("keydown", e=>{if(e.key==="Enter") performSearch(searchBox.value);});
+
+  // display results
+  function displayResults(results){
+    resultsDiv.innerHTML="";
+    if(results.length===0){resultsDiv.innerHTML="<p>No results found</p>"; return;}
+    results.forEach(r=>{
+      const div=document.createElement("div");
+      div.className="result";
+      div.innerHTML=`<h3 onclick="saveDownload('${r.title}')">${r.title}</h3><p>${r.content.slice(0,100)}...</p>`;
+      resultsDiv.appendChild(div);
+    });
+  }
+
+  // HISTORY
+  function saveHistory(query){
+    let history=JSON.parse(localStorage.getItem("history"))||[];
+    history.push(query);
+    localStorage.setItem("history",JSON.stringify(history));
+    displayHistory();
+  }
+
+  function displayHistory(){
+    const list=document.getElementById("history-list");
+    list.innerHTML="";
+    let history=JSON.parse(localStorage.getItem("history"))||[];
+    history.forEach((item,index)=>{
+      const li=document.createElement("li");
+      li.textContent=item;
+      const delBtn=document.createElement("button");
+      delBtn.textContent="❌";
+      delBtn.onclick=()=>deleteHistory(index);
+      li.appendChild(delBtn);
+      list.appendChild(li);
+    });
+  }
+
+  function deleteHistory(index){
+    let history=JSON.parse(localStorage.getItem("history"))||[];
+    history.splice(index,1);
+    localStorage.setItem("history",JSON.stringify(history));
+    displayHistory();
+  }
+
+  // DOWNLOADS
+  function saveDownload(title){
+    let downloads=JSON.parse(localStorage.getItem("downloads"))||[];
+    downloads.push(title);
+    localStorage.setItem("downloads",JSON.stringify(downloads));
+    displayDownloads();
+  }
+
+  function displayDownloads(){
+    const list=document.getElementById("downloads-list");
+    list.innerHTML="";
+    let downloads=JSON.parse(localStorage.getItem("downloads"))||[];
+    downloads.forEach(item=>{
+      const li=document.createElement("li");
+      li.textContent=item;
+      list.appendChild(li);
+    });
+  }
+
+  // load on start
+  document.addEventListener("DOMContentLoaded",()=>{
+    displayHistory();
+    displayDownloads();
+  });
+</script>
+
+</body>
+</html>
